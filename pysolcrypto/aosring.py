@@ -81,4 +81,6 @@ if __name__ == "__main__":
 	print(aosring_check(*aosring_sign(*keys, message=msg), message=msg))
 
 	proof = aosring_sign(*keys, message=msg)
-	print(quotelist([item.n for sublist in proof[0] for item in sublist]) + ',' + quotelist(proof[1]) + ',' + quote(proof[2]) + ',' + quote(msg))
+	print(
+		f'{quotelist([item.n for sublist in proof[0] for item in sublist])},{quotelist(proof[1])},{quote(proof[2])},{quote(msg)}'
+	)

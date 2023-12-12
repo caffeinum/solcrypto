@@ -86,4 +86,6 @@ if __name__ == "__main__":
 	proof = uaosring_sign(*keys, message=msg)
 
 	tag = quotelist([proof[1][0].n, proof[1][1].n])
-	print(quotelist([item.n for sublist in proof[0] for item in sublist]) + ',' + tag + ',' + quotelist(proof[2]) + ',' + quote(proof[3]) + ',' + quote(msg))
+	print(
+		f'{quotelist([item.n for sublist in proof[0] for item in sublist])},{tag},{quotelist(proof[2])},{quote(proof[3])},{quote(msg)}'
+	)

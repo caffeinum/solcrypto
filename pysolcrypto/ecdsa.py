@@ -20,7 +20,7 @@ def pack_signature(v, r, s):
 	fails, whereas packing it into the `r` value fails 50% of the
 	time as you'd expect....
 	"""
-	assert v == 27 or v == 28
+	assert v in [27, 28]
 	v = (v - 27) << 255
 	return tobe256(r), tobe256(s | v)
 

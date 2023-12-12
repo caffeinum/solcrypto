@@ -88,4 +88,6 @@ if __name__ == "__main__":
 
 	proof = haosring_sign(*keys, message=msg)
 	print(haosring_check(*proof, message=msg))
-	print(quotelist([item for sublist in proof[0] for item in sublist]) + ',' + quotelist(proof[1]) + ',' + quote(proof[2]) + ',' + quote(msg))
+	print(
+		f'{quotelist([item for sublist in proof[0] for item in sublist])},{quotelist(proof[1])},{quote(proof[2])},{quote(msg)}'
+	)

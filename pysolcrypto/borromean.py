@@ -82,7 +82,7 @@ def borromean_ring_sign(rings, pairs, msg=None):
   assert msg is None or isinstance(msg, int)
   assert len(pairs) == len(rings) and len(rings) > 0
   n = len(rings)
-  ring_s_mat = [[randsn() for p in ring] for ring in rings]
+  ring_s_mat = [[randsn() for _ in ring] for ring in rings]
   ring_e_mat = [[0] * len(ring) for ring in rings]
   ring_e_mat = [[0] * len(ring) for ring in rings]
   ring_alphas = [randsn() for _ in range(n)]
@@ -112,13 +112,12 @@ def borromean_ring_sign(rings, pairs, msg=None):
       e = 0
       if first_it:
         R = multiply(G1, ring_alphas[i])
-        e = hashx(R, msg=msg)
         first_it = False
       else:
         sG = multiply(G1, ring_s_mat[i][j])
         eP = multiply(rings[i][j], ring_e_mat[i][j])
         R = add(sG, negp(eP))
-        e = hashx(R, msg=msg)
+      e = hashx(R, msg=msg)
       j = (j + 1) % len(rings[i])
       ring_e_mat[i][j] = e if j != 0 else e_0
     ring_s_mat[i][j] = addmodn(

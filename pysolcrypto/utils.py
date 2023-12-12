@@ -5,9 +5,9 @@ from functools import reduce
 from os import urandom
 from sha3 import keccak_256
 
-quote = lambda x: '"' + str(x) + '"'
+quote = lambda x: f'"{str(x)}"'
 quotemany = lambda *x: ','.join(map(quote, x))
-quotelist = lambda x: '[' + quotemany(*x) + ']'
+quotelist = lambda x: f'[{quotemany(*x)}]'
 
 safe_ord = ord if sys.version_info.major == 2 else lambda x: x if isinstance(x, int) else ord(x)
 
@@ -18,7 +18,7 @@ def packl(lnum):
         return b'\0'
     s = hex(lnum)[2:].rstrip('L')
     if len(s) & 1:
-        s = '0' + s
+        s = f'0{s}'
     return binascii.unhexlify(s)
 
 int_to_big_endian = packl

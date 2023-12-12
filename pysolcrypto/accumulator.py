@@ -31,8 +31,7 @@ def accumulate(items_list, secret):
         xi = addmodn(hashsn(item), secret)
         x0_mul_to_xn = mulmodp(x0_mul_to_xn, xi)
 
-    AkX = multiply(G1, x0_mul_to_xn)
-    return AkX
+    return multiply(G1, x0_mul_to_xn)
 
 
 def witness(AkX, my_item, secret):

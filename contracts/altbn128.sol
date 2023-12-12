@@ -7,7 +7,7 @@
 // The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-pragma solidity ^0.4.14;
+pragma solidity ^0.8.0;
 
 library Curve {
    	// p = p(u) = 36u^4 + 36u^3 + 24u^2 + 6u + 1
@@ -47,12 +47,12 @@ library Curve {
 	}
 
 	/// @return the generator of G1
-	function P1() pure internal returns (G1Point) {
+	function P1() pure internal returns (G1Point memory) {
 		return G1Point(1, 2);
 	}
 
 	function HashToPoint(uint256 s)
-        internal constant returns (G1Point)
+        internal view returns (G1Point memory)
     {
         uint256 beta = 0;
         uint256 y = 0;
@@ -81,7 +81,7 @@ library Curve {
     * Returns: (x^3 + b), y
     */
     function FindYforX(uint256 x)
-        internal constant returns (uint256, uint256)
+        internal view returns (uint256, uint256)
     {
         // beta = (x^3 + b) % p
         uint256 beta = addmod(mulmod(mulmod(x, x, FIELD_ORDER), x, FIELD_ORDER), CURVE_B, FIELD_ORDER);
@@ -109,7 +109,7 @@ library Curve {
 
 
     function expMod(uint256 _base, uint256 _exponent, uint256 _modulus)
-        internal constant returns (uint256 retval)
+        internal view returns (uint256 retval)
     {
         bool success;
         uint256[1] memory output;
@@ -121,9 +121,10 @@ library Curve {
         input[4] = _exponent;
         input[5] = _modulus;
         assembly {
-            success := staticcall(sub(gas, 2000), 5, input, 0xc0, output, 0x20)
+            success := staticcall(sub(gas(), 2000), 5, input, 0xc0, output, 0x20)
             // Use "invalid" to make gas estimation work
-            switch success case 0 { invalid }
+			// // switch success case 0 { invalid }
+			// revert(0, 0)
         }
         require(success);
         return output[0];
@@ -131,7 +132,7 @@ library Curve {
 
 
 	/// @return the generator of G2
-	function P2() pure internal returns (G2Point) {
+	function P2() pure internal returns (G2Point memory) {
 		return G2Point(
 			[11559732032986387107991004021392285783925812861821192530917403151452391805634,
 			 10857046999023057135944570762232829481370756359578518086990519993285655852781],
@@ -141,7 +142,7 @@ library Curve {
 	}
 
 	/// @return the negation of p, i.e. p.add(p.negate()) should be zero.
-	function g1neg(G1Point p) pure internal returns (G1Point) {
+	function g1neg(G1Point memory p) pure internal returns (G1Point memory) {
 		// The prime q in the base field F_q for G1
 		uint q = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 		if (p.X == 0 && p.Y == 0)
@@ -149,8 +150,9 @@ library Curve {
 		return G1Point(p.X, q - (p.Y % q));
 	}
 
-	/// @return the sum of two points of G1
-	function g1add(G1Point p1, G1Point p2) constant internal returns (G1Point r) {
+	/// @return r the sum of two points of G1
+
+	function g1add(G1Point memory p1, G1Point memory p2) view internal returns (G1Point memory r) {
 		uint[4] memory input;
 		input[0] = p1.X;
 		input[1] = p1.Y;
@@ -158,25 +160,25 @@ library Curve {
 		input[3] = p2.Y;
 		bool success;
 		assembly {
-			success := staticcall(sub(gas, 2000), 6, input, 0xc0, r, 0x60)
+			success := staticcall(sub(gas(), 2000), 6, input, 0xc0, r, 0x60)
 			// Use "invalid" to make gas estimation work
-			switch success case 0 { invalid }
+			// switch success case 0 { invalid }
 		}
 		require(success);
 	}
 
-	/// @return the product of a point on G1 and a scalar, i.e.
+	/// @return r the product of a point on G1 and a scalar, i.e.
 	/// p == p.mul(1) and p.add(p) == p.mul(2) for all points p.
-	function g1mul(G1Point p, uint s) constant internal returns (G1Point r) {
+	function g1mul(G1Point memory p, uint s) view internal returns (G1Point memory r) {
 		uint[3] memory input;
 		input[0] = p.X;
 		input[1] = p.Y;
 		input[2] = s;
 		bool success;
 		assembly {
-			success := staticcall(sub(gas, 2000), 7, input, 0x80, r, 0x60)
+			success := staticcall(sub(gas(), 2000), 7, input, 0x80, r, 0x60)
 			// Use "invalid" to make gas estimation work
-			switch success case 0 { invalid }
+			// switch success case 0 { invalid }
 		}
 		require (success);
 	}
@@ -185,7 +187,7 @@ library Curve {
 	/// e(p1[0], p2[0]) *  .... * e(p1[n], p2[n]) == 1
 	/// For example pairing([P1(), P1().negate()], [P2(), P2()]) should
 	/// return true.
-	function pairing(G1Point[] p1, G2Point[] p2) constant internal returns (bool) {
+	function pairing(G1Point[] memory p1, G2Point[] memory p2) view internal returns (bool) {
 		require(p1.length == p2.length);
 		uint elements = p1.length;
 		uint inputSize = elements * 6;
@@ -202,16 +204,16 @@ library Curve {
 		uint[1] memory out;
 		bool success;
 		assembly {
-			success := staticcall(sub(gas, 2000), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+			success := staticcall(sub(gas(), 2000), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
 			// Use "invalid" to make gas estimation work
-			switch success case 0 { invalid }
+			// switch success case 0 { invalid }
 		}
 		require(success);
 		return out[0] != 0;
 	}
 
 	/// Convenience method for a pairing check for two pairs.
-	function pairingProd2(G1Point a1, G2Point a2, G1Point b1, G2Point b2) constant internal returns (bool) {
+	function pairingProd2(G1Point memory a1, G2Point memory a2, G1Point memory b1, G2Point memory b2) view internal returns (bool) {
 		G1Point[] memory p1 = new G1Point[](2);
 		G2Point[] memory p2 = new G2Point[](2);
 		p1[0] = a1;
@@ -223,10 +225,10 @@ library Curve {
 
 	/// Convenience method for a pairing check for three pairs.
 	function pairingProd3(
-			G1Point a1, G2Point a2,
-			G1Point b1, G2Point b2,
-			G1Point c1, G2Point c2
-	) constant internal returns (bool) {
+			G1Point memory a1, G2Point memory a2,
+			G1Point memory b1, G2Point memory b2,
+			G1Point memory c1, G2Point memory c2
+	) view internal returns (bool) {
 		G1Point[] memory p1 = new G1Point[](3);
 		G2Point[] memory p2 = new G2Point[](3);
 		p1[0] = a1;
@@ -240,11 +242,11 @@ library Curve {
 
 	/// Convenience method for a pairing check for four pairs.
 	function pairingProd4(
-			G1Point a1, G2Point a2,
-			G1Point b1, G2Point b2,
-			G1Point c1, G2Point c2,
-			G1Point d1, G2Point d2
-	) constant internal returns (bool) {
+			G1Point memory a1, G2Point memory a2,
+			G1Point memory b1, G2Point memory b2,
+			G1Point memory c1, G2Point memory c2,
+			G1Point memory d1, G2Point memory d2
+	) view internal returns (bool) {
 		G1Point[] memory p1 = new G1Point[](4);
 		G2Point[] memory p2 = new G2Point[](4);
 		p1[0] = a1;
